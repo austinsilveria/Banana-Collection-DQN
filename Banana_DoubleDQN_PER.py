@@ -62,8 +62,8 @@ GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR = 4e-4               # learning rate
 UPDATE_EVERY = 4        # how often to update the network
-A = 0.6                 # how much agent samples memory from priorities
-B = 0.4                 # reliance of importance sampling weight on priortization
+ALPHA = 0.6             # reliance of sampling on prioritization
+BETA = 0.4              # reliance of importance sampling weight on priortization
 
 device = torch.device('cpu')
 
@@ -89,12 +89,11 @@ class Agent():
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
 
         # Replay memory
-        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed, A)
+        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed, ALPHA)
         # Initialize time step (for updating every UPDATE_EVERY steps)
         self.t_step = 0
         # Initialize learning step for updating beta
         self.learn_step = 0
-        self.last_loss = 0
     
     def step(self, state, action, reward, next_state, done):
         # Save experience in replay memory
@@ -106,7 +105,7 @@ class Agent():
             # If enough samples are available in memory, get prioritized subset and learn
             if len(self.memory) > BATCH_SIZE:
                 experiences = self.memory.sample()
-                self.learn(experiences, GAMMA, A, B)
+                self.learn(experiences, GAMMA, BETA)
 
     def act(self, state, eps=0.):
         """Returns actions for given state as per current policy.
@@ -129,17 +128,18 @@ class Agent():
         else:
             return random.choice(np.arange(self.action_size))
 
-    def learn(self, experiences, gamma, a, b):
+    def learn(self, experiences, gamma, beta):
         """Update value parameters using given batch of experience tuples.
 
         Params
         ======
             experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples 
             gamma (float): discount factor
+            beta (float): reliance of importance sampling weight on priortization
         """
 
         # Beta will reach 1 after 25,000 training steps (~325 episodes)
-        beta = min(1.0, b + self.learn_step * (1.0 - b) / 25000)
+        b = min(1.0, beta + self.learn_step * (1.0 - beta) / 25000)
         self.learn_step += 1
         
         states, actions, rewards, next_states, dones, probabilities, indices = experiences
@@ -160,7 +160,7 @@ class Agent():
         self.memory.update_priority(new_priorities, indices)
 
         # Compute and apply importance sampling weights to TD Errors
-        ISweights = (((1 / len(self.memory)) * (1 / probabilities)) ** beta)
+        ISweights = (((1 / len(self.memory)) * (1 / probabilities)) ** b)
         max_ISweight = torch.max(ISweights)
         ISweights /= max_ISweight
         Q_targets *= ISweights
@@ -204,6 +204,7 @@ class ReplayBuffer:
             buffer_size (int): maximum size of buffer
             batch_size (int): size of each training batch
             seed (int): random seed
+            alpha (float): reliance of sampling on prioritization
         """
         self.action_size = action_size
         self.memory = SumTree(buffer_size)
@@ -265,7 +266,14 @@ class SumTree:
     """
     Leaf nodes hold experiences and intermediate nodes store experience priority sums.
     """
+    
     def __init__(self, maxlen):
+        """Initialize a SumTree object.
+
+        Params
+        ======
+            maxlen (int): maximum size of replay buffer
+        """
         self.sumList = np.zeros(maxlen*2)
         self.experiences = np.zeros(maxlen*2, dtype=object)
         self.maxlen = maxlen

@@ -30,6 +30,7 @@ If you need a different version, download the environment from one of the links 
     PyTorch
     Numpy
     Matplotlib
+    Jupyter (Optional, python files are provided if you wish to run from command line)
     
 ### Instructions
 
