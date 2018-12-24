@@ -46,6 +46,8 @@ If the environment does not respond, force quit the environment window and under
 
 ### Sources
 
+DQN Model and Agent adapted from: https://github.com/udacity/deep-reinforcement-learning
+
 DQN: https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf
 
 Double DQN: https://arxiv.org/pdf/1509.06461.pdf
