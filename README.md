@@ -47,7 +47,11 @@ If the environment does not respond, force quit the environment window and under
 ### Sources
 
 DQN: https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf
+
 Double DQN: https://arxiv.org/pdf/1509.06461.pdf
+
 Prioritized Experience Replay: https://arxiv.org/pdf/1511.05952.pdf
+
 Sum Tree: https://jaromiru.com/2016/11/07/lets-make-a-dqn-double-learning-and-prioritized-experience-replay/
+
 Dueling DQN: https://arxiv.org/pdf/1511.06581.pdf
