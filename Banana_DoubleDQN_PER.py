@@ -265,6 +265,8 @@ class ReplayBuffer:
 class SumTree:
     """
     Leaf nodes hold experiences and intermediate nodes store experience priority sums.
+    
+    Adapted from: https://jaromiru.com/2016/11/07/lets-make-a-dqn-double-learning-and-prioritized-experience-replay/
     """
     
     def __init__(self, maxlen):
